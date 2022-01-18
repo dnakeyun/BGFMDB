@@ -445,7 +445,7 @@
  删除
  */
 - (IBAction)deleteAction:(id)sender{
-    NSString* where = [NSString stringWithFormat:@"where %@=%@",bg_sqlKey(bg_primaryKey),@(1)];
+    NSString* where = [NSString stringWithFormat:@"where %@=%@",primaryId,@(1)];
     [People bg_delete:bg_tablename where:where];
 }
 /**
@@ -454,7 +454,7 @@
 - (IBAction)updateAction:(id)sender {
     People* p = [self people];
     p.bg_tableName = bg_tablename;//自定义的数据库表名称(库自带的字段).
-    NSString* where = [NSString stringWithFormat:@"where %@=%@",bg_sqlKey(bg_primaryKey),@(1)];
+    NSString* where = [NSString stringWithFormat:@"where %@=%@",primaryId,@(1)];
     [p bg_updateWhere:where];
 }
 /**
@@ -515,7 +515,7 @@
         
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0), ^{
             NSLog(@"更新...");
-            NSString* where = [NSString stringWithFormat:@"set %@=%@ where %@=%@",bg_sqlKey(@"name"),bg_sqlValue(@"标哥"),bg_sqlKey(@"name"),bg_sqlValue(@"斯巴达")];
+            NSString* where = [NSString stringWithFormat:@"set %@=%@ where %@=%@",(@"name"),bg_sqlValue(@"标哥"),(@"name"),bg_sqlValue(@"斯巴达")];
             [People bg_update:bg_tablename where:where];
         });
         

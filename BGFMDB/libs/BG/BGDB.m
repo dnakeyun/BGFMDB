@@ -382,7 +382,7 @@ static BGDB* BGdb = nil;
                     }
                 }
             }else{
-                if ([key isEqualToString:bg_primaryKey] && !unionPrimaryKeys.count){
+                if ([key isEqualToString:primaryId] && !unionPrimaryKeys.count){
                     [sql appendFormat:@"%@ primary key autoincrement",[BGTool keyAndType:keys[i]]];
                 }else{
                     [sql appendString:[BGTool keyAndType:keys[i]]];
@@ -394,9 +394,9 @@ static BGDB* BGdb = nil;
                     [sql appendString:@",primary key ("];
                     [unionPrimaryKeys enumerateObjectsUsingBlock:^(id  _Nonnull unionKey, NSUInteger idx, BOOL * _Nonnull stop) {
                         if(idx == 0){
-                            [sql appendString:bg_sqlKey(unionKey)];
+                            [sql appendString:unionKey];
                         }else{
-                            [sql appendFormat:@",%@",bg_sqlKey(unionKey)];
+                            [sql appendFormat:@",%@",unionKey];
                         }
                     }];
                     [sql appendString:@")"];
@@ -438,9 +438,9 @@ static BGDB* BGdb = nil;
     __block BOOL result;
     [self executeDB:^(FMDatabase * _Nonnull db) {
         NSArray* keys = dict.allKeys;
-        if([keys containsObject:bg_sqlKey(bg_primaryKey)]){
-           NSInteger num = [self getKeyMaxForTable:name key:bg_sqlKey(bg_primaryKey) db:db];
-           [dict setValue:@(num+1) forKey:bg_sqlKey(bg_primaryKey)];
+        if([keys containsObject:primaryId]){
+           NSInteger num = [self getKeyMaxForTable:name key:primaryId db:db];
+           [dict setValue:@(num+1) forKey:primaryId];
         }
         NSArray* values = dict.allValues;
         NSMutableString* SQL = [[NSMutableString alloc] init];
@@ -542,7 +542,7 @@ static BGDB* BGdb = nil;
                 if(uniqueKeys.count > 1){
                     [where appendString:@" where"];
                     [uniqueKeys enumerateObjectsUsingBlock:^(NSString*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop){
-                        NSString* uniqueKey = bg_sqlKey(obj);
+                        NSString* uniqueKey = obj;
                         id uniqueKeyVlaue = tempDict[uniqueKey];
                         if(idx < (uniqueKeys.count-1)){
                             [where appendFormat:@" %@=%@ or",uniqueKey,bg_sqlValue(uniqueKeyVlaue)];
@@ -552,13 +552,13 @@ static BGDB* BGdb = nil;
                         [tempDict removeObjectForKey:uniqueKey];
                     }];
                 }else if(uniqueKeys.count == 1){
-                    NSString* uniqueKey = bg_sqlKey([uniqueKeys firstObject]);
+                    NSString* uniqueKey = [uniqueKeys firstObject];
                     id uniqueKeyVlaue = tempDict[uniqueKey];
                     [where appendFormat:@" where %@=%@",uniqueKey,bg_sqlValue(uniqueKeyVlaue)];
                     [tempDict removeObjectForKey:uniqueKey];
-                }else if([dict.allKeys containsObject:bg_sqlKey(bg_primaryKey)]){
-                    NSString* primaryKey = bg_sqlKey(bg_primaryKey);
-                    id primaryKeyVlaue = tempDict[primaryKey];
+                }else if([dict.allKeys containsObject:primaryId]){
+                    NSString* primaryKey = primaryId;
+                    id primaryKeyVlaue = tempDict[primaryId];
                     [where appendFormat:@" where %@=%@",primaryKey,bg_sqlValue(primaryKeyVlaue)];
                     [tempDict removeObjectForKey:primaryKey];
                 }else;
@@ -606,7 +606,7 @@ static BGDB* BGdb = nil;
         __block NSInteger counter = 0;
         [dictArray enumerateObjectsUsingBlock:^(NSDictionary * _Nonnull dict, NSUInteger idx, BOOL * _Nonnull stop) {
             @autoreleasepool {
-                NSString* bg_id = bg_sqlKey(bg_primaryKey);
+                NSString* bg_id = primaryId;
                 //获得"唯一约束"
                 NSArray* uniqueKeys = [BGTool executeSelector:bg_uniqueKeysSelector forClass:cla];
                 //获得"联合主键"
@@ -627,13 +627,13 @@ static BGDB* BGdb = nil;
                     }
                     
                     if(tempKeys.count == 1){
-                        NSString* tempkey = bg_sqlKey([tempKeys firstObject]);
+                        NSString* tempkey = [tempKeys firstObject];
                         id tempkeyVlaue = tempDict[tempkey];
                         [where appendFormat:@" where %@=%@",tempkey,bg_sqlValue(tempkeyVlaue)];
                     }else{
                         [where appendString:@" where"];
                         [tempKeys enumerateObjectsUsingBlock:^(NSString*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop){
-                            NSString* tempkey = bg_sqlKey(obj);
+                            NSString* tempkey = obj;
                             id tempkeyVlaue = tempDict[tempkey];
                             if(idx < (tempKeys.count-1)){
                                 [where appendFormat:@" %@=%@ %@",tempkey,bg_sqlValue(tempkeyVlaue),orAnd];
@@ -652,7 +652,7 @@ static BGDB* BGdb = nil;
                     if(dataCount){
                         //更新操作
                         [tempKeys enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                            [tempDict removeObjectForKey:bg_sqlKey(obj)];
+                            [tempDict removeObjectForKey:obj];
                         }];
                     }else{
                         //插入操作
@@ -699,7 +699,7 @@ static BGDB* BGdb = nil;
                     if([tempDict.allKeys containsObject:bg_id]){
                         [tempDict removeObjectForKey:bg_id];//移除主键
                     }
-                    [tempDict removeObjectForKey:bg_sqlKey(bg_createTimeKey)];//移除创建时间
+                    [tempDict removeObjectForKey:bg_createTimeKey];//移除创建时间
                     [SQL appendFormat:@"update %@ set ",tablename];
                     [tempDict enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
                         [SQL appendFormat:@"%@=?,",key];
@@ -785,7 +785,7 @@ static BGDB* BGdb = nil;
         if ((keys!=nil)&&(keys.count>0)) {
             [SQL appendString:@" "];
             for(int i=0;i<keys.count;i++){
-                [SQL appendFormat:@"%@%@",BG,keys[i]];
+                [SQL appendFormat:@"%@",keys[i]];
                 if (i != (keys.count-1)) {
                     [SQL appendString:@","];
                 }
@@ -1105,9 +1105,9 @@ static BGDB* BGdb = nil;
     !where?:[strM appendString:@" where "];
     for(int i=0;i<where.count;i+=3){
         if ([where[i+2] isKindOfClass:[NSString class]]) {
-            [strM appendFormat:@"%@%@%@'%@'",BG,where[i],where[i+1],where[i+2]];
+            [strM appendFormat:@"%@%@'%@'",where[i],where[i+1],where[i+2]];
         }else{
-            [strM appendFormat:@"%@%@%@%@",BG,where[i],where[i+1],where[i+2]];
+            [strM appendFormat:@"%@%@%@",where[i],where[i+1],where[i+2]];
         }
         
         if (i != (where.count-3)) {
@@ -1175,16 +1175,16 @@ static BGDB* BGdb = nil;
     NSString* method;
     switch (methodType) {
         case bg_min:
-            method = [NSString stringWithFormat:@"min(%@%@)",BG,key];
+            method = [NSString stringWithFormat:@"min(%@)",key];
             break;
         case bg_max:
-            method = [NSString stringWithFormat:@"max(%@%@)",BG,key];
+            method = [NSString stringWithFormat:@"max(%@)",key];
             break;
         case bg_sum:
-            method = [NSString stringWithFormat:@"sum(%@%@)",BG,key];
+            method = [NSString stringWithFormat:@"sum(%@)",key];
             break;
         case bg_avg:
-            method = [NSString stringWithFormat:@"avg(%@%@)",BG,key];
+            method = [NSString stringWithFormat:@"avg(%@)",key];
             break;
         default:
             NSAssert(NO,@"请传入方法类型!");
@@ -1281,7 +1281,7 @@ static BGDB* BGdb = nil;
                     for(NSString* keyAndType in keys){
                         NSString* key = [keyAndType componentsSeparatedByString:@"*"][0];
                         //字段名前加上 @"BG_"
-                        key = [NSString stringWithFormat:@"%@%@",BG,key];
+                        key = [NSString stringWithFormat:@"%@",key];
                         if (oldDict[key]){
                             newDict[key] = oldDict[key];
                         }
@@ -1407,16 +1407,14 @@ static BGDB* BGdb = nil;
                     NSMutableDictionary* newDict = [NSMutableDictionary dictionary];
                     for(NSString* keyAndType in keys){
                         NSString* key = [keyAndType componentsSeparatedByString:@"*"][0];
-                        //字段名前加上 @"BG_"
-                        key = [NSString stringWithFormat:@"%@%@",BG,key];
                         if (oldDict[key]){
                             newDict[key] = oldDict[key];
                         }
                     }
                     for(int i=0;i<oldKeys.count;i++){
                         //字段名前加上 @"BG_"
-                        NSString* oldkey = [NSString stringWithFormat:@"%@%@",BG,oldKeys[i]];
-                        NSString* newkey = [NSString stringWithFormat:@"%@%@",BG,newKeys[i]];
+                        NSString* oldkey = [NSString stringWithFormat:@"%@",oldKeys[i]];
+                        NSString* newkey = [NSString stringWithFormat:@"%@",newKeys[i]];
                         if (oldDict[oldkey]){
                             newDict[newkey] = oldDict[oldkey];
                         }
@@ -1556,7 +1554,7 @@ static BGDB* BGdb = nil;
                     NSString* key = [[keyAndtype componentsSeparatedByString:@"*"] firstObject];
                     if(ignoredkeys && [ignoredkeys containsObject:key])continue;
                     
-                    key = [NSString stringWithFormat:@"%@%@",BG,key];
+                    key = [NSString stringWithFormat:@"%@",key];
                     if (![columNames containsObject:key]) {
                         [newKeys addObject:keyAndtype];
                     }
@@ -1567,7 +1565,7 @@ static BGDB* BGdb = nil;
                     [keys removeObjectsInArray:ignoredkeys];
                 }
                 [columNames enumerateObjectsUsingBlock:^(NSString* _Nonnull columName, NSUInteger idx, BOOL * _Nonnull stop) {
-                    NSString* propertyName = [columName stringByReplacingOccurrencesOfString:BG withString:@""];
+                    NSString* propertyName = columName;
                     if(![keys containsObject:propertyName]){
                         [sqlKeys addObject:columName];
                     }
@@ -1846,8 +1844,8 @@ static BGDB* BGdb = nil;
                     NSMutableDictionary* destDict = [NSMutableDictionary dictionary];
                     for(int i=0;i<srcKeys.count;i++){
                         //字段名前加上 @"BG_"
-                        NSString* destSqlKey = [NSString stringWithFormat:@"%@%@",BG,destKeys[i]];
-                        NSString* srcSqlKey = [NSString stringWithFormat:@"%@%@",BG,srcKeys[i]];
+                        NSString* destSqlKey = [NSString stringWithFormat:@"%@",destKeys[i]];
+                        NSString* srcSqlKey = [NSString stringWithFormat:@"%@",srcKeys[i]];
                         destDict[destSqlKey] = srcDict[srcSqlKey];
                     }
                     [BGSelf insertIntoTableName:destTable Dict:destDict complete:^(BOOL isSuccess) {
@@ -1942,7 +1940,7 @@ static BGDB* BGdb = nil;
         __weak typeof(self) BGSelf = self;
         [self isExistWithTableName:name complete:^(BOOL isSuccess) {
             if (!isSuccess) {
-                [BGSelf createTableWithTableName:name keys:@[[NSString stringWithFormat:@"%@*i",bg_primaryKey],@"param*@\"NSString\"",@"index*i"] unionPrimaryKeys:nil uniqueKeys:nil complete:nil];
+                [BGSelf createTableWithTableName:name keys:@[[NSString stringWithFormat:@"%@*i",primaryId],@"param*@\"NSString\"",@"index*i"] unionPrimaryKeys:nil uniqueKeys:nil complete:nil];
             }
         }];
         __block NSInteger sqlCount = [self countQueueForTable:name where:nil];
@@ -1973,7 +1971,7 @@ static BGDB* BGdb = nil;
     NSAssert(name,@"唯一标识名不能为空!");
     dispatch_semaphore_wait(self.semaphore, DISPATCH_TIME_FOREVER);
     @autoreleasepool {
-        NSString* condition = [NSString stringWithFormat:@"order by %@ asc",bg_sqlKey(bg_primaryKey)];
+        NSString* condition = [NSString stringWithFormat:@"order by %@ asc",primaryId];
         [self queryQueueWithTableName:name conditions:condition complete:^(NSArray * _Nullable array) {
             NSMutableArray* resultM = nil;
             if(array&&array.count){
@@ -2071,7 +2069,7 @@ static BGDB* BGdb = nil;
         NSString* const tableName = @"BG_Dictionary";
         [self isExistWithTableName:tableName complete:^(BOOL isSuccess) {
             if (!isSuccess) {
-                [BGSelf createTableWithTableName:tableName keys:@[[NSString stringWithFormat:@"%@*i",bg_primaryKey],@"key*@\"NSString\"",@"value*@\"NSString\""] unionPrimaryKeys:nil uniqueKeys:@[@"key"] complete:nil];
+                [BGSelf createTableWithTableName:tableName keys:@[[NSString stringWithFormat:@"%@*i",primaryId],@"key*@\"NSString\"",@"value*@\"NSString\""] unionPrimaryKeys:nil uniqueKeys:@[@"key"] complete:nil];
             }
         }];
         __block NSInteger num = 0;
@@ -2134,7 +2132,7 @@ static BGDB* BGdb = nil;
     dispatch_semaphore_wait(self.semaphore, DISPATCH_TIME_FOREVER);
     @autoreleasepool{
         NSString* const tableName = @"BG_Dictionary";
-        NSString* condition = [NSString stringWithFormat:@"order by %@ asc",bg_sqlKey(bg_primaryKey)];
+        NSString* condition = [NSString stringWithFormat:@"order by %@ asc",primaryId];
         [self queryQueueWithTableName:tableName conditions:condition complete:^(NSArray * _Nullable array) {
             BOOL stopFlag = NO;
             for(NSDictionary* dict in array){

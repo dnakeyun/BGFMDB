@@ -12,7 +12,7 @@
 // 过期方法注释
 #define BGFMDBDeprecated(instead) NS_DEPRECATED(2_0, 2_0, 2_0, 2_0, instead)
 
-#define bg_primaryKey @"bg_id"
+#define primaryId @"pk"
 #define bg_createTimeKey @"bg_createTime"
 #define bg_updateTimeKey @"bg_updateTime"
 
@@ -49,11 +49,7 @@ typedef NS_ENUM(NSInteger,bg_dataTimeType){
     bg_createTime,//存储时间
     bg_updateTime,//更新时间
 };
-
-/**
- 封装处理传入数据库的key和value.
- */
-extern NSString* _Nonnull bg_sqlKey(NSString* _Nonnull key);
+ 
 /**
  转换OC对象成数据库数据.
  */

@@ -206,7 +206,7 @@
         tablename = NSStringFromClass([self class]);
     }
     NSMutableString* where = [NSMutableString string];
-    orderBy?[where appendFormat:@"order by %@%@ ",BG,orderBy]:[where appendFormat:@"order by %@ ",bg_rowid];
+    orderBy?[where appendFormat:@"order by %@ ",orderBy]:[where appendFormat:@"order by %@ ",bg_rowid];
     desc?[where appendFormat:@"desc"]:[where appendFormat:@"asc"];
     !limit?:[where appendFormat:@" limit %@",@(limit)];
     __block NSArray* results;
@@ -238,7 +238,7 @@
         tablename = NSStringFromClass([self class]);
     }
     NSMutableString* where = [NSMutableString string];
-    orderBy?[where appendFormat:@"order by %@%@ ",BG,orderBy]:[where appendFormat:@"order by %@ ",bg_rowid];
+    orderBy?[where appendFormat:@"order by %@ ",orderBy]:[where appendFormat:@"order by %@ ",bg_rowid];
     desc?[where appendFormat:@"desc"]:[where appendFormat:@"asc"];
     NSAssert((range.location>0)&&(range.length>0),@"range参数错误,location应该大于零,length应该大于零");
     [where appendFormat:@" limit %@,%@",@(range.location-1),@(range.length)];
@@ -315,9 +315,9 @@
     [like appendString:@"%'"];
     NSString* where;
     if(type == bg_createTime){
-        where = [NSString stringWithFormat:@"where %@ like %@",bg_sqlKey(bg_createTimeKey),like];
+        where = [NSString stringWithFormat:@"where %@ like %@",bg_createTimeKey,like];
     }else{
-        where = [NSString stringWithFormat:@"where %@ like %@",bg_sqlKey(bg_updateTimeKey),like];
+        where = [NSString stringWithFormat:@"where %@ like %@",bg_updateTimeKey,like];
     }
     return [self bg_find:tablename where:where];
 }

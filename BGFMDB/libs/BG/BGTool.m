@@ -51,13 +51,6 @@ static NSSet *foundationClasses_;
 
 @implementation BGTool
 /**
- 封装处理传入数据库的key和value.
- */
-NSString* bg_sqlKey(NSString* key){
-    return [NSString stringWithFormat:@"%@%@",BG,key];
-}
-
-/**
  转换OC对象成数据库数据.
  */
 NSString* bg_sqlValue(id value){
@@ -229,12 +222,12 @@ void bg_cleanCache(){
     
     NSMutableArray* keys = [NSMutableArray array];
     if(onlyKey){
-        [keys addObject:bg_primaryKey];
+        [keys addObject:primaryId];
         [keys addObject:bg_createTimeKey];
         [keys addObject:bg_updateTimeKey];
     }else{
         //手动添加库自带的自动增长主键ID和类型q
-        [keys addObject:[NSString stringWithFormat:@"%@*q",bg_primaryKey]];
+        [keys addObject:[NSString stringWithFormat:@"%@*q",primaryId]];
         //建表时此处加入额外的两个字段(createTime和updateTime).
         [keys addObject:[NSString stringWithFormat:@"%@*@\"NSString\"",bg_createTimeKey]];
         [keys addObject:[NSString stringWithFormat:@"%@*@\"NSString\"",bg_updateTimeKey]];
@@ -273,7 +266,7 @@ void bg_cleanCache(){
     if(!(where.count%3)){
         [SQL appendString:@" where "];
         for(int i=0;i<where.count;i+=3){
-            [SQL appendFormat:@"%@%@%@?",BG,where[i],where[i+1]];
+            [SQL appendFormat:@"%@%@?",where[i],where[i+1]];
             if (i != (where.count-3)) {
                 [SQL appendString:@" and "];
             }
@@ -352,12 +345,12 @@ void bg_cleanCache(){
         }
         if(likeOr){
             if(keypaths.count<=2){
-                [likeM appendFormat:@"((%@%@ like '%@') or (%@%@ like '%@'))",BG,keypaths[0],keyPathParam,BG,keypaths[0],[keyPathParam stringByReplacingOccurrencesOfString:@"," withString:@"\n}"]];
+                [likeM appendFormat:@"((%@ like '%@') or (%@ like '%@'))",keypaths[0],keyPathParam,keypaths[0],[keyPathParam stringByReplacingOccurrencesOfString:@"," withString:@"\n}"]];
             }else{
-                [likeM appendFormat:@"((%@%@ like '%@') or (%@%@ like '%@'))",BG,keypaths[0],keyPathParam,BG,keypaths[0],[keyPathParam stringByReplacingOccurrencesOfString:@"," withString:@"\\"]];
+                [likeM appendFormat:@"((%@ like '%@') or (%@ like '%@'))",keypaths[0],keyPathParam,keypaths[0],[keyPathParam stringByReplacingOccurrencesOfString:@"," withString:@"\\"]];
             }
         }else{
-            [likeM appendFormat:@"%@%@ like '%@'",BG,keypaths[0],keyPathParam];
+            [likeM appendFormat:@"%@ like '%@'",keypaths[0],keyPathParam];
         }
         if(i != (keys.count-1)){
             [likeM appendString:@" and "];
@@ -393,7 +386,7 @@ void bg_cleanCache(){
         NSAssert(NO,@"没有找到匹配的类型!");
     }
     //设置列名(BG_ + 属性名),加BG_是为了防止和数据库关键字发生冲突.
-    return [NSString stringWithFormat:@"%@ %@",[NSString stringWithFormat:@"%@%@",BG,key],SqlType];
+    return [NSString stringWithFormat:@"%@ %@",[NSString stringWithFormat:@"%@",key],SqlType];
 }
 
 +(NSString*)getSqlType:(NSString*)type{
@@ -424,7 +417,7 @@ void bg_cleanCache(){
         
         if([ignoreKeys containsObject:propertyName])continue;
         
-        if(![propertyName isEqualToString:bg_primaryKey]){
+        if(![propertyName isEqualToString:primaryId]){
             id propertyValue = [object valueForKey:propertyName];
             if (propertyValue){
                 id Value = [self getSqlValue:propertyValue type:propertyType encode:YES];
@@ -703,9 +696,6 @@ void bg_cleanCache(){
     for(int i=0;i<valueDictKeys.count;i++){
         NSString* sqlKey = valueDictKeys[i];
         NSString* tempSqlKey = sqlKey;
-        if([sqlKey containsString:BG]){
-            tempSqlKey = [sqlKey stringByReplacingOccurrencesOfString:BG withString:@""];
-        }
         for(NSString* keyAndType in keyAndTypes){
             NSArray* arrKT = [keyAndType componentsSeparatedByString:@"*"];
             NSString* key = [arrKT firstObject];
@@ -1036,7 +1026,7 @@ void bg_cleanCache(){
         if(![ignoredKeys containsObject:propertyName]){
             
             //数据库表列名(BG_ + 属性名),加BG_是为了防止和数据库关键字发生冲突.
-            NSString* sqlColumnName = [NSString stringWithFormat:@"%@%@",BG,propertyName];
+            NSString* sqlColumnName = [NSString stringWithFormat:@"%@",propertyName];
             
             id propertyValue;
             id sqlValue;
@@ -1070,10 +1060,10 @@ void bg_cleanCache(){
     NSMutableDictionary* valueDict = [self getDictWithObject:object ignoredKeys:ignoredKeys];
     
     if (filtModelInfoType == bg_ModelInfoSingleUpdate){//单条更新操作时,移除 创建时间和主键 字段不做更新
-        [valueDict removeObjectForKey:bg_sqlKey(bg_createTimeKey)];
+        [valueDict removeObjectForKey:bg_createTimeKey];
         //判断是否定义了“联合主键”.
         NSArray* unionPrimaryKeys = [BGTool executeSelector:bg_unionPrimaryKeysSelector forClass:[object class]];
-        NSString* bg_id = bg_sqlKey(bg_primaryKey);
+        NSString* bg_id = primaryId;
         if(unionPrimaryKeys.count == 0){
             if([valueDict.allKeys containsObject:bg_id]) {
                 [valueDict removeObjectForKey:bg_id];
@@ -1086,7 +1076,7 @@ void bg_cleanCache(){
     }else if(filtModelInfoType == bg_ModelInfoInsert){//插入时要移除主键,不然会出错.
         //判断是否定义了“联合主键”.
         NSArray* unionPrimaryKeys = [BGTool executeSelector:bg_unionPrimaryKeysSelector forClass:[object class]];
-        NSString* bg_id = bg_sqlKey(bg_primaryKey);
+        NSString* bg_id = primaryId;
         if(unionPrimaryKeys.count == 0){
             if([valueDict.allKeys containsObject:bg_id]) {
                 [valueDict removeObjectForKey:bg_id];
@@ -1097,7 +1087,7 @@ void bg_cleanCache(){
             }
         }
     }else if(filtModelInfoType == bg_ModelInfoArrayUpdate){//批量更新操作时,移除 创建时间 字段不做更新
-        [valueDict removeObjectForKey:bg_sqlKey(bg_createTimeKey)];
+        [valueDict removeObjectForKey:bg_createTimeKey];
     }else;
     
 //#warning 压缩深层嵌套模型数据量使用

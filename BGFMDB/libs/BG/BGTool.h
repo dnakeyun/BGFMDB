@@ -20,7 +20,6 @@
 
 #define bg_completeBlock(obj) !complete?:complete(obj);
 
-#define BG @"BG_"
 #define bg_tableNameKey @"bg_tableName"
 #define bg_rowid @"rowid"
 
