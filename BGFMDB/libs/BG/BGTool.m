@@ -1105,6 +1105,14 @@ void bg_cleanCache(){
     
     return valueDict;
 }
++(NSArray *_Nullable)getArray:(NSArray *_Nonnull)array ignoredKeys:(NSArray* const _Nullable)ignoredKeys filtModelInfoType:(bg_getModelInfoType)filtModelInfoType {
+    NSMutableArray* dictArray = [NSMutableArray array];
+    [array enumerateObjectsUsingBlock:^(id  _Nonnull object, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSDictionary* dict = [BGTool getDictWithObject:object ignoredKeys:ignoredKeys filtModelInfoType:filtModelInfoType];
+        [dictArray addObject:dict];
+    }];
+    return dictArray;
+}
 /**
  过滤建表的key.
  */

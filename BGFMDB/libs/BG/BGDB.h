@@ -10,6 +10,12 @@
 #import "BGFMDBConfig.h"
 #import "FMDB.h"
 
+
+#define bg_debug(param) do{\
+if(self.debug){bg_log(@"调试输出: %@",param);}\
+}while(0)
+
+
 @interface BGDB : NSObject
 //信号量.
 @property(nonatomic, strong)dispatch_semaphore_t _Nullable semaphore;
@@ -25,6 +31,13 @@
  设置操作过程中不可关闭数据库(即closeDB函数无效).
  */
 @property(nonatomic,assign)BOOL disableCloseDB;
+/**
+ 数据库队列
+ */
+@property (nonatomic, strong) FMDatabaseQueue * _Nullable queue;
+@property (nonatomic, strong) FMDatabase* _Nullable db;
+@property (nonatomic, assign) BOOL inTransaction;
+
 /**
  获取单例函数.
  */
@@ -297,4 +310,10 @@
  删除字典元素.
  */
 -(BOOL)bg_deleteValueForKey:(NSString* const _Nonnull)key;
+/**
+ 为了对象层的事物操作而封装的函数.
+ */
+-(void)executeDB:(void (^_Nonnull)(FMDatabase *_Nonnull db))block;
+-(void)doChangeWithName:(NSString* const _Nonnull)name flag:(BOOL)flag state:(bg_changeState)state;
+-(NSInteger)getKeyMaxForTable:(NSString*)name key:(NSString*)key db:(FMDatabase*)db;
 @end

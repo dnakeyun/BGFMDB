@@ -15,10 +15,6 @@
  */
 #define SQLITE_NAME @"BGFMDB.db"
 
-#define bg_debug(param) do{\
-if(self.debug){bg_log(@"调试输出: %@",param);}\
-}while(0)
-
 #define MaxQueryPageNum 50
 
 #define CachePath(name) [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:name]
@@ -26,12 +22,7 @@ if(self.debug){bg_log(@"调试输出: %@",param);}\
 static const void * const BGFMDBDispatchQueueSpecificKey = &BGFMDBDispatchQueueSpecificKey;
 
 @interface BGDB()
-/**
- 数据库队列
- */
-@property (nonatomic, strong) FMDatabaseQueue *queue;
-@property (nonatomic, strong) FMDatabase* db;
-@property (nonatomic, assign) BOOL inTransaction;
+
 /**
  多线程池
  */
@@ -1612,20 +1603,11 @@ static BGDB* BGdb = nil;
     
 }
 
--(NSArray*)getArray:(NSArray*)array ignoredKeys:(NSArray* const _Nullable)ignoredKeys filtModelInfoType:(bg_getModelInfoType)filtModelInfoType{
-    NSMutableArray* dictArray = [NSMutableArray array];
-    [array enumerateObjectsUsingBlock:^(id  _Nonnull object, NSUInteger idx, BOOL * _Nonnull stop) {
-        NSDictionary* dict = [BGTool getDictWithObject:object ignoredKeys:ignoredKeys filtModelInfoType:filtModelInfoType];
-        [dictArray addObject:dict];
-    }];
-    return dictArray;
-}
-
 /**
  批量插入数据
  */
 -(void)insertWithObjects:(NSArray*)array ignoredKeys:(NSArray* const _Nullable)ignoredKeys complete:(bg_complete_B)complete{
-    NSArray* dictArray = [self getArray:array ignoredKeys:ignoredKeys filtModelInfoType:bg_ModelInfoInsert];
+    NSArray* dictArray = [BGTool getArray:array ignoredKeys:ignoredKeys filtModelInfoType:bg_ModelInfoInsert];
     //自动判断是否有字段改变,自动刷新数据库.
     [self ifIvarChangeForObject:array.firstObject ignoredKeys:ignoredKeys];
     NSString* tableName = [BGTool getTableNameWithObject:array.firstObject];
@@ -1636,7 +1618,7 @@ static BGDB* BGdb = nil;
  over
  */
 -(void)updateSetWithObjects:(NSArray*)array ignoredKeys:(NSArray* const _Nullable)ignoredKeys complete:(bg_complete_B)complete{
-    NSArray* dictArray = [self getArray:array ignoredKeys:ignoredKeys filtModelInfoType:bg_ModelInfoArrayUpdate];
+    NSArray* dictArray = [BGTool getArray:array ignoredKeys:ignoredKeys filtModelInfoType:bg_ModelInfoArrayUpdate];
     NSString* tableName = [BGTool getTableNameWithObject:array.firstObject];
     [self updateSetTableName:tableName class:[array.firstObject class] DictArray:dictArray complete:complete];
 }
@@ -1674,7 +1656,7 @@ static BGDB* BGdb = nil;
         //自动判断是否有字段改变,自动刷新数据库.
         [self ifIvarChangeForObject:array.firstObject ignoredKeys:ignoredKeys];
         //转换模型数据
-        NSArray* dictArray = [self getArray:array ignoredKeys:ignoredKeys filtModelInfoType:bg_ModelInfoNone];
+        NSArray* dictArray = [BGTool getArray:array ignoredKeys:ignoredKeys filtModelInfoType:bg_ModelInfoNone];
         //获取自定义表名
         NSString* tableName = [BGTool getTableNameWithObject:array.firstObject];
         [self bg_saveOrUpdateWithTableName:tableName class:[array.firstObject class] DictArray:dictArray complete:complete];

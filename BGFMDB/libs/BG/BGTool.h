@@ -9,6 +9,12 @@
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
 
+typedef NS_ENUM(NSInteger, bg_getModelInfoType){//过滤数据类型
+    bg_ModelInfoInsert,//插入过滤
+    bg_ModelInfoSingleUpdate,//单条更新过滤
+    bg_ModelInfoArrayUpdate,//批量更新过滤
+    bg_ModelInfoNone//无过滤
+};
 /**
  日志输出
  */
@@ -27,12 +33,6 @@
 #define bg_ignoreKeysSelector NSSelectorFromString(@"bg_ignoreKeys")
 #define bg_unionPrimaryKeysSelector NSSelectorFromString(@"bg_unionPrimaryKeys")
 
-typedef NS_ENUM(NSInteger,bg_getModelInfoType){//过滤数据类型
-    bg_ModelInfoInsert,//插入过滤
-    bg_ModelInfoSingleUpdate,//单条更新过滤
-    bg_ModelInfoArrayUpdate,//批量更新过滤
-    bg_ModelInfoNone//无过滤
-};
 
 @interface BGTool : NSObject
 /**
@@ -112,7 +112,9 @@ typedef NS_ENUM(NSInteger,bg_getModelInfoType){//过滤数据类型
 /**
  根据对象获取要更新或插入的字典.
  */
-+(NSDictionary* _Nonnull)getDictWithObject:(id _Nonnull)object ignoredKeys:(NSArray* const _Nullable)ignoredKeys filtModelInfoType:(bg_getModelInfoType)filtModelInfoType;
++ (NSDictionary* _Nonnull)getDictWithObject:(id _Nonnull)object ignoredKeys:(NSArray* const _Nullable)ignoredKeys filtModelInfoType:(bg_getModelInfoType)filtModelInfoType;
+
++ (NSArray *_Nullable)getArray:(NSArray *_Nonnull)array ignoredKeys:(NSArray* const _Nullable)ignoredKeys filtModelInfoType:(bg_getModelInfoType)filtModelInfoType;
 /**
  过滤建表的key.
  */
